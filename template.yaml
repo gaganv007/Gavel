@@ -42,6 +42,16 @@ Resources:
           BASE_RPC_URL: !Ref BaseRpcUrl
           X402_ENABLED: !Ref X402Enabled
           X402_RECIPIENT: !Ref X402Recipient
+          BEDROCK_FALLBACK_ENABLED: "true"
+          BEDROCK_MODEL_ID: "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+      Policies:
+        - Statement:
+            - Sid: BedrockInvoke
+              Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+                - bedrock:InvokeModelWithResponseStream
+              Resource: "*"
       Events:
         ApiRoot:
           Type: HttpApi
