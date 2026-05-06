@@ -52,3 +52,4 @@ contracts/broadcast/
 # Vim swap files
 *.swp
 .*.swp
+samconfig.toml
