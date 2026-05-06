@@ -13,12 +13,13 @@ import time
 from typing import Optional
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from agent import GavelAgent
 from onchain import OnchainSettler
+from x402 import X402Middleware
 
 load_dotenv()
 
@@ -36,6 +37,10 @@ app.add_middleware(
 )
 
 agent = GavelAgent()
+x402 = X402Middleware(
+    recipient=os.environ.get("X402_RECIPIENT"),
+    enabled=os.environ.get("X402_ENABLED", "false").lower() == "true",
+)
 
 # Settler is optional — only initialized if the env vars are set.
 _settler: Optional[OnchainSettler] = None
@@ -88,7 +93,12 @@ def healthz():
 
 
 @app.post("/resolve", response_model=ResolveResponse)
-def resolve(req: ResolveRequest):
+async def resolve(req: ResolveRequest, request: Request):
+    # x402: gate the request behind USDC payment
+    gate_response = await x402.gate(request)
+    if gate_response is not None:
+        return gate_response
+
     start = time.time()
 
     # 1. Get verdict from the agent.
