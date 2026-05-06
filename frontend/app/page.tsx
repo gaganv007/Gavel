@@ -11,11 +11,39 @@ import {
   ShieldCheck,
   Zap,
   FileText,
+  Wallet,
+  CreditCard,
 } from "lucide-react";
+import {
+  useAccount,
+  useConnect,
+  useDisconnect,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+  useChainId,
+  useSwitchChain,
+} from "wagmi";
+import { parseUnits, type Address } from "viem";
+import { baseSepolia } from "wagmi/chains";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const EXPLORER = process.env.NEXT_PUBLIC_BASESCAN_URL || "https://sepolia.basescan.org";
 const CONTRACT = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "";
+
+const USDC_BASE_SEPOLIA = "0x036CbD53842c5426634e7929541eC2318f3dCF7e" as const;
+
+const ERC20_ABI = [
+  {
+    name: "transfer",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "to", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+  },
+] as const;
 
 type Source = { url: string; title: string; snippet: string };
 type OnchainReceipt = {
@@ -34,6 +62,12 @@ type ResolveResponse = {
   model: string;
   elapsed_ms: number;
   onchain: OnchainReceipt | null;
+};
+type PaymentTerms = {
+  payTo: Address;
+  amount: string;
+  asset: Address;
+  network: string;
 };
 
 const DEMO_MARKETS = [
@@ -60,31 +94,136 @@ const DEMO_MARKETS = [
   },
 ];
 
+type Stage =
+  | "idle"
+  | "fetching-terms"
+  | "awaiting-wallet"
+  | "switching-chain"
+  | "awaiting-payment"
+  | "confirming-payment"
+  | "resolving"
+  | "done"
+  | "error";
+
 export default function Home() {
   const [selected, setSelected] = useState(DEMO_MARKETS[0]);
-  const [loading, setLoading] = useState(false);
+  const [stage, setStage] = useState<Stage>("idle");
+  const [terms, setTerms] = useState<PaymentTerms | null>(null);
+  const [paymentTxHash, setPaymentTxHash] = useState<`0x${string}` | null>(null);
   const [result, setResult] = useState<ResolveResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function resolve() {
-    setLoading(true);
+  const { address, isConnected } = useAccount();
+  const { connect, connectors } = useConnect();
+  const { disconnect } = useDisconnect();
+  const chainId = useChainId();
+  const { switchChainAsync } = useSwitchChain();
+  const { writeContractAsync } = useWriteContract();
+  const { isLoading: waitingForReceipt, isSuccess: paymentConfirmed } =
+    useWaitForTransactionReceipt({
+      hash: paymentTxHash ?? undefined,
+    });
+
+  // When the on-chain payment confirms, retry /resolve with X-Payment.
+  if (paymentConfirmed && stage === "confirming-payment") {
+    setStage("resolving");
+    void retryResolveWithPayment();
+  }
+
+  async function retryResolveWithPayment() {
+    if (!paymentTxHash) return;
+    try {
+      const res = await fetch(`${API_URL}/resolve`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Payment": paymentTxHash,
+        },
+        body: JSON.stringify({ question: selected.question }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.detail || body.error || `HTTP ${res.status}`);
+      }
+      setResult(await res.json());
+      setStage("done");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
+      setStage("error");
+    }
+  }
+
+  function reset() {
+    setStage("idle");
+    setTerms(null);
+    setPaymentTxHash(null);
+    setResult(null);
+    setError(null);
+  }
+
+  async function startResolution() {
     setError(null);
     setResult(null);
+    setStage("fetching-terms");
+
     try {
       const res = await fetch(`${API_URL}/resolve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: selected.question }),
       });
-      if (!res.ok) {
-        const detail = await res.json().catch(() => ({ detail: res.statusText }));
-        throw new Error(detail.detail || `HTTP ${res.status}`);
+
+      if (res.status === 402) {
+        const data = await res.json();
+        const accept = data.accepts?.[0];
+        if (!accept) throw new Error("missing payment terms in 402 response");
+        setTerms({
+          payTo: accept.payTo as Address,
+          amount: accept.maxAmountRequired,
+          asset: accept.asset as Address,
+          network: accept.network,
+        });
+        setStage("awaiting-wallet");
+        return;
       }
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.detail || body.error || `HTTP ${res.status}`);
+      }
+
+      // x402 disabled on backend — return verdict directly.
       setResult(await res.json());
+      setStage("done");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setLoading(false);
+      setStage("error");
+    }
+  }
+
+  async function payAndRetry() {
+    if (!terms || !address) return;
+    setError(null);
+
+    try {
+      // Make sure we're on Base Sepolia
+      if (chainId !== baseSepolia.id) {
+        setStage("switching-chain");
+        await switchChainAsync({ chainId: baseSepolia.id });
+      }
+
+      setStage("awaiting-payment");
+      const hash = await writeContractAsync({
+        address: USDC_BASE_SEPOLIA,
+        abi: ERC20_ABI,
+        functionName: "transfer",
+        args: [terms.payTo, BigInt(terms.amount)],
+      });
+      setPaymentTxHash(hash);
+      setStage("confirming-payment");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
+      setStage("error");
     }
   }
 
@@ -117,9 +256,19 @@ export default function Home() {
               The AI oracle that calls it.
             </span>
           </div>
-          {/* FIX 1: was missing closing > on this div */}
           <div className="flex items-center gap-4 text-xs text-slate-400">
-            {/* FIX 2: was missing opening <a tag */}
+            {isConnected && address ? (
+              <button
+                onClick={() => disconnect()}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-800/60 hover:bg-slate-800 transition"
+              >
+                <Wallet className="w-3 h-3" />
+                <span className="font-mono">
+                  {address.slice(0, 6)}…{address.slice(-4)}
+                </span>
+              </button>
+            ) : null}
+            {/* FIX: was missing the opening <a> tag */}
             <a
               href={`${EXPLORER}/address/${CONTRACT}`}
               target="_blank"
@@ -145,8 +294,7 @@ export default function Home() {
                 key={m.id}
                 onClick={() => {
                   setSelected(m);
-                  setResult(null);
-                  setError(null);
+                  reset();
                 }}
                 className={`w-full text-left rounded-xl border transition p-5 ${
                   selected.id === m.id
@@ -185,43 +333,95 @@ export default function Home() {
               </h3>
             </div>
 
-            <p className="text-slate-100 mb-6 leading-relaxed">
-              {selected.question}
-            </p>
+            <p className="text-slate-100 mb-6 leading-relaxed">{selected.question}</p>
 
-            {!result && !loading && (
+            {stage === "idle" && (
               <button
-                onClick={resolve}
-                disabled={loading}
+                onClick={startResolution}
                 className="w-full py-3.5 rounded-lg font-semibold bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 hover:from-amber-300 hover:to-orange-400 transition shadow-lg shadow-amber-500/10"
               >
                 Resolve for $0.50 USDC
               </button>
             )}
 
-            {loading && <LoadingState />}
+            {stage === "fetching-terms" && (
+              <StatusCard
+                icon={<Loader2 className="w-4 h-4 animate-spin" />}
+                title="Requesting payment terms…"
+                detail="POST /resolve → expecting HTTP 402"
+              />
+            )}
 
-            {error && (
+            {stage === "awaiting-wallet" && terms && (
+              <PaymentRequiredCard
+                terms={terms}
+                isConnected={isConnected}
+                connectors={connectors}
+                onConnect={(c) => connect({ connector: c })}
+                onPay={payAndRetry}
+              />
+            )}
+
+            {stage === "switching-chain" && (
+              <StatusCard
+                icon={<Loader2 className="w-4 h-4 animate-spin" />}
+                title="Switching to Base Sepolia…"
+                detail="approve the network change in your wallet"
+              />
+            )}
+
+            {stage === "awaiting-payment" && (
+              <StatusCard
+                icon={<Loader2 className="w-4 h-4 animate-spin" />}
+                title="Awaiting wallet signature…"
+                detail="confirm the USDC transfer in MetaMask"
+              />
+            )}
+
+            {stage === "confirming-payment" && paymentTxHash && (
+              <div className="rounded-lg bg-slate-950/40 border border-slate-800 p-5 space-y-3">
+                <div className="flex items-center gap-2 text-amber-400">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="text-sm font-medium">Waiting for payment confirmation…</span>
+                </div>
+                {/* FIX: was missing the opening <a> tag */}
+                <a
+                  href={`${EXPLORER}/tx/${paymentTxHash}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block text-xs font-mono text-slate-400 hover:text-amber-400 truncate"
+                >
+                  {paymentTxHash}
+                </a>
+                {waitingForReceipt && (
+                  <p className="text-xs text-slate-500">~5-15 seconds on Base Sepolia</p>
+                )}
+              </div>
+            )}
+
+            {stage === "resolving" && (
+              <ResolvingCard />
+            )}
+
+            {stage === "error" && (
               <div className="rounded-lg border border-rose-500/40 bg-rose-500/5 p-4 text-sm text-rose-300">
                 <p className="font-medium mb-1">Resolution failed</p>
-                <p className="text-rose-400/80">{error}</p>
+                <p className="text-rose-400/80 break-words">{error}</p>
                 <button
-                  onClick={resolve}
+                  onClick={reset}
                   className="mt-3 text-xs underline text-rose-300 hover:text-rose-200"
                 >
-                  Try again
+                  Start over
                 </button>
               </div>
             )}
 
-            {result && VerdictIcon && (
+            {stage === "done" && result && VerdictIcon && (
               <div className="space-y-5">
                 <div className="rounded-lg bg-slate-950/50 p-5 border border-slate-800">
                   <div className="flex items-center gap-3 mb-3">
                     <VerdictIcon className={`w-7 h-7 ${verdictColor}`} />
-                    <span className={`text-2xl font-bold ${verdictColor}`}>
-                      {result.verdict}
-                    </span>
+                    <span className={`text-2xl font-bold ${verdictColor}`}>{result.verdict}</span>
                     <span className="ml-auto text-xs text-slate-500 font-mono">
                       {(result.confidence * 100).toFixed(1)}% confident
                     </span>
@@ -250,7 +450,7 @@ export default function Home() {
                   </p>
                   <div className="space-y-2">
                     {result.sources.map((s, i) => (
-                      // FIX 3: was missing opening <a tag
+                      // FIX: was using bare <a> without closing JSX properly
                       <a
                         key={i}
                         href={s.url}
@@ -262,20 +462,35 @@ export default function Home() {
                           {s.title}
                         </p>
                         {s.snippet && (
-                          <p className="text-xs text-slate-500 mt-1">
-                            &quot;{s.snippet}&quot;
-                          </p>
+                          <p className="text-xs text-slate-500 mt-1">&quot;{s.snippet}&quot;</p>
                         )}
-                        <p className="text-xs text-slate-600 mt-1 truncate">
-                          {s.url}
-                        </p>
+                        <p className="text-xs text-slate-600 mt-1 truncate">{s.url}</p>
                       </a>
                     ))}
                   </div>
                 </div>
 
+                {paymentTxHash && (
+                  // FIX: was missing the opening <a> tag
+                  <a
+                    href={`${EXPLORER}/tx/${paymentTxHash}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block rounded-lg bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/30 p-4 hover:border-blue-500/60 transition"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <CreditCard className="w-4 h-4 text-blue-400" />
+                      <span className="text-sm font-semibold text-blue-400">
+                        Payment via x402 (USDC)
+                      </span>
+                      <ExternalLink className="w-3 h-3 text-blue-400/60 ml-auto" />
+                    </div>
+                    <p className="text-xs font-mono text-slate-400 truncate">{paymentTxHash}</p>
+                  </a>
+                )}
+
                 {result.onchain && (
-                  // FIX 4: was missing opening <a tag
+                  // FIX: was missing the opening <a> tag
                   <a
                     href={result.onchain.explorer_url}
                     target="_blank"
@@ -300,10 +515,7 @@ export default function Home() {
                 )}
 
                 <button
-                  onClick={() => {
-                    setResult(null);
-                    setError(null);
-                  }}
+                  onClick={reset}
                   className="w-full py-2 text-xs text-slate-500 hover:text-slate-300 transition"
                 >
                   Back to markets
@@ -312,9 +524,9 @@ export default function Home() {
             )}
           </div>
 
-          {!loading && !result && (
+          {stage === "idle" && (
             <p className="text-xs text-slate-600 text-center mt-4 leading-relaxed">
-              Gavel pays Anthropic + a Base gas fee per query. Average resolution: ~25s.
+              Pay 0.50 USDC via x402 → Claude resolves → verdict written to Base in ~25s.
             </p>
           )}
         </div>
@@ -327,22 +539,98 @@ export default function Home() {
   );
 }
 
-function LoadingState() {
+function StatusCard({
+  icon,
+  title,
+  detail,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  detail?: string;
+}) {
+  return (
+    <div className="rounded-lg bg-slate-950/40 border border-slate-800 p-5 space-y-2">
+      <div className="flex items-center gap-2 text-amber-400">
+        {icon}
+        <span className="text-sm font-medium">{title}</span>
+      </div>
+      {detail && <p className="text-xs text-slate-500">{detail}</p>}
+    </div>
+  );
+}
+
+function PaymentRequiredCard({
+  terms,
+  isConnected,
+  connectors,
+  onConnect,
+  onPay,
+}: {
+  terms: PaymentTerms;
+  isConnected: boolean;
+  connectors: readonly { uid: string; name: string; id: string }[];
+  onConnect: (c: { uid: string; name: string; id: string }) => void;
+  onPay: () => void;
+}) {
+  const amountUsdc = Number(terms.amount) / 1_000_000;
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-4 text-sm">
+        <p className="text-amber-300 font-semibold mb-2 flex items-center gap-2">
+          <CreditCard className="w-4 h-4" />
+          HTTP 402 — Payment Required
+        </p>
+        <div className="space-y-1 text-xs text-slate-300 font-mono">
+          <div>amount: {amountUsdc.toFixed(2)} USDC</div>
+          <div>network: {terms.network}</div>
+          <div className="truncate">payTo: {terms.payTo}</div>
+        </div>
+      </div>
+
+      {!isConnected ? (
+        <div className="space-y-2">
+          <p className="text-xs text-slate-500 mb-2">connect a wallet to continue</p>
+          {connectors
+            .filter((c) => c.id === "metaMask" || c.id === "injected")
+            .map((c) => (
+              <button
+                key={c.uid}
+                onClick={() => onConnect(c)}
+                className="w-full py-2.5 rounded-lg font-medium bg-slate-800 hover:bg-slate-700 transition flex items-center justify-center gap-2"
+              >
+                <Wallet className="w-4 h-4" />
+                Connect {c.name}
+              </button>
+            ))}
+        </div>
+      ) : (
+        <button
+          onClick={onPay}
+          className="w-full py-3 rounded-lg font-semibold bg-gradient-to-r from-emerald-400 to-teal-500 text-slate-900 hover:from-emerald-300 hover:to-teal-400 transition"
+        >
+          Pay {amountUsdc.toFixed(2)} USDC
+        </button>
+      )}
+    </div>
+  );
+}
+
+function ResolvingCard() {
   const stages = [
-    { label: "Reasoning over web evidence", time: "0-15s" },
-    { label: "Hashing evidence + signing tx", time: "15-25s" },
-    { label: "Settling on Base Sepolia", time: "25-40s" },
+    { label: "Verifying payment on-chain" },
+    { label: "Reasoning over web evidence (~12s)" },
+    { label: "Hashing evidence + signing" },
+    { label: "Settling on Base Sepolia (~5s)" },
   ];
   return (
     <div className="rounded-lg bg-slate-950/40 border border-slate-800 p-5 space-y-3">
       <div className="flex items-center gap-2 text-amber-400 mb-2">
         <Loader2 className="w-4 h-4 animate-spin" />
-        <span className="text-sm font-medium">Gavel is deliberating...</span>
+        <span className="text-sm font-medium">Gavel is deliberating…</span>
       </div>
       {stages.map((s, i) => (
         <div key={i} className="flex items-center justify-between text-xs">
           <span className="text-slate-300">{s.label}</span>
-          <span className="text-slate-600 font-mono">{s.time}</span>
         </div>
       ))}
     </div>
