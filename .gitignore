@@ -16,7 +16,11 @@ build/
 contracts/out/
 contracts/cache/
 contracts/broadcast/
-contracts/lib/
+# Foundry build outputs
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+# (don't ignore contracts/lib — submodules live there)
 
 # Env files (NEVER commit these)
 .env
