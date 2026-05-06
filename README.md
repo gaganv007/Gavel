@@ -5,3 +5,15 @@
 - **Network:** Base Sepolia (chain ID 84532)
 - **Oracle signer:** [`0x1FBC...D1a3`](https://sepolia.basescan.org/address/0x1FBC0968103F9865eDab69E9F7140B509Cf5D1a3)
 
+## Live API on AWS
+
+- **Endpoint:** https://twm1ztoxud.execute-api.us-east-1.amazonaws.com
+- **Health:** `curl https://twm1ztoxud.execute-api.us-east-1.amazonaws.com/healthz`
+- **Try a verdict:**
+```bash
+  curl -X POST https://twm1ztoxud.execute-api.us-east-1.amazonaws.com/resolve \
+    -H "Content-Type: application/json" \
+    -d '{"question":"Did Argentina win the FIFA World Cup in Qatar 2022?"}'
+```
+- **Stack:** AWS Lambda (Python 3.11, ARM64) + API Gateway, deployed via SAM
+- **Region:** us-east-1
