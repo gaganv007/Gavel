@@ -1,0 +1,9 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "gavel"
+resolve_s3 = true
+s3_prefix = "gavel"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "AnthropicApiKey=REPLACE_ME OraclePrivateKey=REPLACE_ME OracleContractAddress=0x781fF2E176196F2a3fDedA1a892d86FE0Bf42320 BaseRpcUrl=https://sepolia.base.org"

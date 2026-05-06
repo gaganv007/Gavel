@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Gavel — AI oracle for prediction markets (FastAPI on Lambda)
+
+Globals:
+  Function:
+    Timeout: 90
+    MemorySize: 1024
+    Runtime: python3.11
+    Architectures:
+      - arm64
+
+Parameters:
+  AnthropicApiKey:
+    Type: String
+    NoEcho: true
+  OraclePrivateKey:
+    Type: String
+    NoEcho: true
+  OracleContractAddress:
+    Type: String
+  BaseRpcUrl:
+    Type: String
+    Default: https://sepolia.base.org
+
+Resources:
+  GavelApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api/
+      Handler: lambda_handler.handler
+      Environment:
+        Variables:
+          ANTHROPIC_API_KEY: !Ref AnthropicApiKey
+          ORACLE_PRIVATE_KEY: !Ref OraclePrivateKey
+          ORACLE_CONTRACT_ADDRESS: !Ref OracleContractAddress
+          BASE_RPC_URL: !Ref BaseRpcUrl
+      Events:
+        ApiRoot:
+          Type: HttpApi
+          Properties:
+            Path: /
+            Method: ANY
+        ApiProxy:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+
+Outputs:
+  GavelApiUrl:
+    Description: "Gavel public API URL"
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
