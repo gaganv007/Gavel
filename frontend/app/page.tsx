@@ -356,8 +356,8 @@ export default function Home() {
               <PaymentRequiredCard
                 terms={terms}
                 isConnected={isConnected}
-                connectors={connectors}
-                onConnect={(c) => connect({ connector: c })}
+                connectors={[...connectors]}
+                onConnect={(c) => connect({ connector: c as Parameters<typeof connect>[0]["connector"] })}
                 onPay={payAndRetry}
               />
             )}
@@ -559,6 +559,8 @@ function StatusCard({
   );
 }
 
+type Connector = { uid: string; name: string; id: string };
+
 function PaymentRequiredCard({
   terms,
   isConnected,
@@ -568,8 +570,8 @@ function PaymentRequiredCard({
 }: {
   terms: PaymentTerms;
   isConnected: boolean;
-  connectors: readonly { uid: string; name: string; id: string }[];
-  onConnect: (c: { uid: string; name: string; id: string }) => void;
+  connectors: readonly Connector[] | Connector[];
+  onConnect: (c: Connector) => void;
   onPay: () => void;
 }) {
   const amountUsdc = Number(terms.amount) / 1_000_000;
