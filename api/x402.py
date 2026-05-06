@@ -106,17 +106,13 @@ class X402Middleware:
 
     def verify_payment(self, payment_header: str) -> tuple[bool, str]:
         """
-        Verify the X-Payment header. For the hackathon, the header is just the
-        on-chain tx hash of the USDC transfer. Production x402 uses a signed
-        EIP-712 payment authorization, but tx-hash verification proves payment
-        in a way judges can verify on Basescan.
-
-        Returns (ok, reason).
+        Verify the X-Payment header. The header is the on-chain tx hash of
+        the USDC transfer. We fetch the receipt, scan logs for a USDC Transfer
+        event TO our recipient with sufficient amount.
         """
         if not payment_header:
             return False, "missing X-Payment header"
 
-        # Allow common prefixes
         tx_hash = payment_header.strip()
         if tx_hash.lower().startswith("x402 "):
             tx_hash = tx_hash.split(" ", 1)[1].strip()
@@ -136,26 +132,45 @@ class X402Middleware:
         if receipt.status != 1:
             return False, "tx reverted"
 
-        # Look for a USDC Transfer event TO our recipient with sufficient amount.
         usdc_addr = USDC_BASE_SEPOLIA.lower()
+        # Pad recipient address to 32 bytes (topics are bytes32)
         recipient_topic = "0x" + ("0" * 24) + self.recipient[2:].lower()
+
+        def _norm(h) -> str:
+            """Normalize a topic/hash to lowercase 0x-prefixed hex."""
+            if isinstance(h, bytes):
+                s = h.hex()
+            else:
+                s = str(h)
+            if s.startswith("0x") or s.startswith("0X"):
+                s = s[2:]
+            return "0x" + s.lower()
 
         for log in receipt.logs:
             if log.address.lower() != usdc_addr:
                 continue
             if len(log.topics) < 3:
                 continue
-            if log.topics[0].hex().lower() != TRANSFER_TOPIC.lower():
+            topic0 = _norm(log.topics[0])
+            if topic0 != TRANSFER_TOPIC.lower():
                 continue
-            # topics[2] is the recipient (padded to 32 bytes)
-            if log.topics[2].hex().lower() != recipient_topic:
+            topic2 = _norm(log.topics[2])
+            if topic2 != recipient_topic:
                 continue
-            amount = int(log.data.hex(), 16) if log.data else 0
+
+            # log.data can be bytes or HexBytes - normalize to int
+            data = log.data
+            if isinstance(data, bytes):
+                amount = int.from_bytes(data, "big") if data else 0
+            else:
+                data_str = _norm(data)
+                amount = int(data_str, 16) if len(data_str) > 2 else 0
+
             if amount >= self.amount_required:
                 self._used_payments.add(tx_hash.lower())
-                return True, f"payment of {amount / 10**USDC_DECIMALS} USDC verified (tx {tx_hash})"
+                return True, f"verified {amount / 10**USDC_DECIMALS:.4f} USDC (tx {tx_hash})"
 
-        return False, "no matching USDC transfer in tx logs"
+        return False, "no matching USDC transfer to recipient in tx logs"
 
     async def gate(self, request: Request) -> Optional[JSONResponse]:
         """
