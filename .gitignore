@@ -42,3 +42,13 @@ npm-debug.log*
 *.key
 private_key.txt
 samconfig.toml
+
+# AWS SAM build artifacts
+.aws-sam/
+
+# Foundry deploy artifacts (already includes broadcast in old gitignore but let's be explicit)
+contracts/broadcast/
+
+# Vim swap files
+*.swp
+.*.swp
