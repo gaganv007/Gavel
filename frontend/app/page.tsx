@@ -634,30 +634,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
-        {/* CTA banner */}
-        <section className="max-w-6xl mx-auto px-6 pb-20">
-          <Link href="/how-it-works" className="block group">
-            <div className="rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900/60 to-slate-900/30 p-8 hover:border-amber-500/30 transition">
-              <div className="flex items-center justify-between gap-6">
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-amber-400/70 font-mono mb-2">
-                    Want the deep dive?
-                  </p>
-                  <h3 className="text-2xl font-bold tracking-tight mb-1">
-                    See the architecture, the stages, the pitch.
-                  </h3>
-                  <p className="text-slate-400 text-sm">
-                    Interactive flow diagram, copy-paste curl examples, the FAQ that answered every judge pushback.
-                  </p>
-                </div>
-                <div className="shrink-0 w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center group-hover:bg-amber-500/20 transition">
-                  <ArrowRight className="w-5 h-5 text-amber-400" />
-                </div>
-              </div>
-            </div>
-          </Link>
-        </section>
       </div>
     </main>
   );
