@@ -34,7 +34,6 @@
 ### MetaMask payment flow
 ![MetaMask popup signing the USDC transfer on Base Sepolia](docs/screenshots/metamask.png)
 
-> *(Don't have screenshots yet? See [generating screenshots](#-generating-screenshots) at the bottom of this README — takes 5 minutes.)*
 
 ---
 
