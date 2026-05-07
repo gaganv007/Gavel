@@ -424,9 +424,8 @@ Save them all into `docs/screenshots/` and commit.
 
 ## 👤 Team
 
-Built solo by **Gagan Veginati** ([@gaganv007](https://github.com/gaganv007))
-Boston University · MS Computer Information Systems
-Background: distributed systems (sharded key-value stores, ShardKV)
+Built by **Gagan Veginati** ([@gaganv007](https://github.com/gaganv007))
+Boston University · MS Computer Science
 
 ---
 
