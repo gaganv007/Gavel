@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   CreditCard,
@@ -27,46 +26,47 @@ import { Nav } from "../_components/Nav";
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "https://twm1ztoxud.execute-api.us-east-1.amazonaws.com";
+const CONTRACT =
+  process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "0x781fF2E176196F2a3fDedA1a892d86FE0Bf42320";
 
 // ---------- React Flow nodes/edges ----------
-// Layout: 3 columns x 3 rows for clean separation, no overlap.
 
 const nodes: Node[] = [
   {
     id: "client",
-    position: { x: 40, y: 200 },
+    position: { x: 0, y: 100 },
     data: { label: "Prediction market" },
     style: nodeStyle("amber"),
   },
   {
     id: "lambda",
-    position: { x: 380, y: 200 },
+    position: { x: 280, y: 0 },
     data: { label: "AWS Lambda\n+ x402 middleware" },
     style: nodeStyle("blue"),
   },
   {
     id: "claude",
-    position: { x: 720, y: 60 },
+    position: { x: 580, y: 0 },
     data: { label: "Claude Sonnet 4.5\n+ web search" },
     style: nodeStyle("purple"),
   },
   {
     id: "bedrock",
-    position: { x: 720, y: 340 },
+    position: { x: 580, y: 110 },
     data: { label: "AWS Bedrock\n(fallback)" },
     style: nodeStyleDashed("purple"),
   },
   {
-    id: "usdc",
-    position: { x: 40, y: 460 },
-    data: { label: "USDC payment\non Base" },
-    style: nodeStyle("teal"),
-  },
-  {
     id: "base",
-    position: { x: 380, y: 460 },
+    position: { x: 280, y: 230 },
     data: { label: "Base Sepolia\nGavelOracle.sol" },
     style: nodeStyle("emerald"),
+  },
+  {
+    id: "usdc",
+    position: { x: 0, y: 230 },
+    data: { label: "USDC payment\non Base" },
+    style: nodeStyle("teal"),
   },
 ];
 
@@ -77,9 +77,8 @@ const edges: Edge[] = [
     target: "lambda",
     label: "POST /resolve",
     animated: true,
-    sourceHandle: "right",
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#fbbf24" },
-    style: { stroke: "#fbbf24", strokeWidth: 1.5 },
+    markerEnd: { type: MarkerType.ArrowClosed },
+    style: { stroke: "#fbbf24" },
     labelStyle: edgeLabel(),
     labelBgStyle: edgeLabelBg(),
   },
@@ -88,9 +87,9 @@ const edges: Edge[] = [
     source: "lambda",
     target: "client",
     label: "HTTP 402",
-    type: "smoothstep",
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#fb7185" },
-    style: { stroke: "#fb7185", strokeDasharray: "4 2", strokeWidth: 1.5 },
+    animated: true,
+    markerEnd: { type: MarkerType.ArrowClosed },
+    style: { stroke: "#fb7185", strokeDasharray: "4 2" },
     labelStyle: edgeLabel(),
     labelBgStyle: edgeLabelBg(),
   },
@@ -99,8 +98,8 @@ const edges: Edge[] = [
     source: "client",
     target: "usdc",
     label: "0.50 USDC",
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#2dd4bf" },
-    style: { stroke: "#2dd4bf", strokeWidth: 1.5 },
+    markerEnd: { type: MarkerType.ArrowClosed },
+    style: { stroke: "#2dd4bf" },
     labelStyle: edgeLabel(),
     labelBgStyle: edgeLabelBg(),
   },
@@ -109,8 +108,8 @@ const edges: Edge[] = [
     source: "usdc",
     target: "lambda",
     label: "verify tx",
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#94a3b8" },
-    style: { stroke: "#94a3b8", strokeWidth: 1.5 },
+    markerEnd: { type: MarkerType.ArrowClosed },
+    style: { stroke: "#94a3b8" },
     labelStyle: edgeLabel(),
     labelBgStyle: edgeLabelBg(),
   },
@@ -119,8 +118,8 @@ const edges: Edge[] = [
     source: "lambda",
     target: "claude",
     label: "resolve",
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#a78bfa" },
-    style: { stroke: "#a78bfa", strokeWidth: 1.5 },
+    markerEnd: { type: MarkerType.ArrowClosed },
+    style: { stroke: "#a78bfa" },
     labelStyle: edgeLabel(),
     labelBgStyle: edgeLabelBg(),
   },
@@ -129,8 +128,8 @@ const edges: Edge[] = [
     source: "claude",
     target: "bedrock",
     label: "529 fallback",
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#a78bfa" },
-    style: { stroke: "#a78bfa", strokeDasharray: "4 2", strokeWidth: 1.5 },
+    markerEnd: { type: MarkerType.ArrowClosed },
+    style: { stroke: "#a78bfa", strokeDasharray: "4 2" },
     labelStyle: edgeLabel(),
     labelBgStyle: edgeLabelBg(),
   },
@@ -139,8 +138,8 @@ const edges: Edge[] = [
     source: "lambda",
     target: "base",
     label: "post verdict",
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#34d399" },
-    style: { stroke: "#34d399", strokeWidth: 1.5 },
+    markerEnd: { type: MarkerType.ArrowClosed },
+    style: { stroke: "#34d399" },
     labelStyle: edgeLabel(),
     labelBgStyle: edgeLabelBg(),
   },
@@ -149,10 +148,9 @@ const edges: Edge[] = [
     source: "base",
     target: "client",
     label: "tx hash",
-    type: "smoothstep",
     animated: true,
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#34d399" },
-    style: { stroke: "#34d399", strokeWidth: 1.5 },
+    markerEnd: { type: MarkerType.ArrowClosed },
+    style: { stroke: "#34d399" },
     labelStyle: edgeLabel(),
     labelBgStyle: edgeLabelBg(),
   },
@@ -171,11 +169,11 @@ function nodeStyle(color: "amber" | "blue" | "purple" | "emerald" | "teal") {
     border: "1px solid " + palette.border,
     color: palette.text,
     borderRadius: 10,
-    padding: "14px 18px",
+    padding: "12px 16px",
     fontSize: 12,
     fontWeight: 500,
     fontFamily: "var(--font-geist-sans), sans-serif",
-    width: 200,
+    width: 180,
     whiteSpace: "pre-line" as const,
     textAlign: "center" as const,
   };
@@ -194,34 +192,53 @@ function edgeLabel() {
     fill: "#cbd5e1",
     fontSize: 10,
     fontFamily: "var(--font-geist-sans), sans-serif",
-    fontWeight: 500,
   };
 }
 
 function edgeLabelBg() {
-  return { fill: "#0f172a", fillOpacity: 0.92 };
+  return { fill: "#0f172a", fillOpacity: 0.85 };
 }
 
 // ---------- Page ----------
 
 export default function HowItWorksPage() {
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 relative overflow-hidden">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 -right-32 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-3xl" />
-        <div className="absolute top-[60%] -left-32 w-[400px] h-[400px] bg-purple-500/5 rounded-full blur-3xl" />
-      </div>
+    <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
+      <Nav />
 
-      <div className="relative z-10">
-        <Nav />
-        <Hero />
-        <ProblemSection />
-        <ArchitectureSection />
-        <StagesSection />
-        <TryItSection />
-        <FaqSection />
-        <div className="h-16" />
-      </div>
+      <Hero />
+      <ProblemSection />
+      <ArchitectureSection />
+      <StagesSection />
+      <TryItSection />
+      <FaqSection />
+
+      <footer className="max-w-6xl mx-auto px-6 py-12 text-xs text-slate-600 mt-12">
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-slate-900">
+          <span>Built at EasyA Consensus Miami · May 2026</span>
+          <div className="flex items-center gap-4">
+            <a
+              href="https://github.com/gaganv007/Gavel"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-amber-400 transition"
+            >
+              github
+            </a>
+            <a
+              href={"https://sepolia.basescan.org/address/" + CONTRACT}
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-amber-400 transition"
+            >
+              contract
+            </a>
+            <a href={API_URL} target="_blank" rel="noreferrer" className="hover:text-amber-400 transition">
+              api
+            </a>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
@@ -230,27 +247,15 @@ export default function HowItWorksPage() {
 
 function Hero() {
   return (
-    <section className="max-w-6xl mx-auto px-6 pt-20 pb-12">
+    <section className="max-w-6xl mx-auto px-6 pt-16 pb-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="flex items-center gap-4 mb-6">
-          <div className="relative w-16 h-16 rounded-xl overflow-hidden ring-1 ring-slate-800">
-            <Image
-              src="/gavel_logo.png"
-              alt="Gavel"
-              fill
-              priority
-              sizes="64px"
-              className="object-cover"
-            />
-          </div>
-          <p className="text-xs uppercase tracking-widest text-amber-400/70 font-mono">
-            How it works
-          </p>
-        </div>
+        <p className="text-xs uppercase tracking-widest text-amber-400/70 font-mono mb-4">
+          How it works
+        </p>
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-5 leading-tight">
           The AI oracle that calls it.
         </h1>
@@ -311,16 +316,14 @@ function ProblemSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.4, delay: i * 0.1 }}
-            className={
-              "rounded-xl border p-5 " +
+            className={"rounded-xl border p-5 " +
               (c.bad
                 ? "border-slate-800 bg-slate-900/30"
                 : "border-amber-500/40 bg-amber-500/5 ring-1 ring-amber-500/20")
             }
           >
             <p
-              className={
-                "text-xs font-semibold uppercase tracking-wider mb-3 " +
+              className={"text-xs font-semibold uppercase tracking-wider mb-3 " +
                 (c.bad ? "text-slate-400" : "text-amber-400")
               }
             >
@@ -359,17 +362,14 @@ function ArchitectureSection() {
       />
       <div
         className="mt-10 rounded-xl border border-slate-800 bg-slate-900/30 overflow-hidden"
-        style={{ height: 620 }}
+        style={{ height: 480 }}
       >
         <ReactFlow
           nodes={nodes}
           edges={edges}
           fitView
-          fitViewOptions={{ padding: 0.18 }}
+          fitViewOptions={{ padding: 0.2 }}
           proOptions={{ hideAttribution: true }}
-          minZoom={0.4}
-          maxZoom={1.5}
-          defaultEdgeOptions={{ type: "default" }}
         >
           <Background gap={20} color="#1e293b" />
           <Controls
@@ -383,7 +383,7 @@ function ArchitectureSection() {
         </ReactFlow>
       </div>
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6 text-xs">
-        <LegendItem color="amber" label="Client (you)" />
+        <LegendItem color="amber" label="Client" />
         <LegendItem color="blue" label="AWS Lambda + API Gateway" />
         <LegendItem color="purple" label="AI inference" />
         <LegendItem color="emerald" label="Base Sepolia + USDC" />
@@ -445,15 +445,25 @@ function StagesSection() {
             transition={{ duration: 0.4, delay: i * 0.08 }}
             className="rounded-xl border border-slate-800 bg-slate-900/40 p-5 flex items-start gap-4"
           >
-            <div className={"shrink-0 p-2.5 rounded-lg " + colorBg(s.color)}>
+            <div
+              className={
+                "shrink-0 p-2.5 rounded-lg " + colorBg(s.color)
+              }
+            >
               <s.icon className={"w-5 h-5 " + colorText(s.color)} />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline justify-between gap-2 mb-1.5">
-                <h3 className="text-base font-semibold text-slate-100">{s.title}</h3>
-                <span className="text-xs font-mono text-slate-500 shrink-0">{s.time}</span>
+                <h3 className="text-base font-semibold text-slate-100">
+                  {s.title}
+                </h3>
+                <span className="text-xs font-mono text-slate-500 shrink-0">
+                  {s.time}
+                </span>
               </div>
-              <p className="text-sm text-slate-400 leading-relaxed">{s.detail}</p>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                {s.detail}
+              </p>
             </div>
           </motion.div>
         ))}
@@ -467,7 +477,7 @@ function TryItSection() {
     {
       label: "1. Get payment terms",
       command:
-        "curl -i -X POST " +
+        'curl -i -X POST ' +
         API_URL +
         "/resolve \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"question\":\"Did Argentina win the 2022 World Cup?\"}'",
       response:
@@ -476,7 +486,7 @@ function TryItSection() {
     {
       label: "2. Pay then retry",
       command:
-        "curl -X POST " +
+        'curl -X POST ' +
         API_URL +
         "/resolve \\\n  -H \"Content-Type: application/json\" \\\n  -H \"X-Payment: 0xPAY_TX_HASH\" \\\n  -d '{\"question\":\"Did Argentina win the 2022 World Cup?\"}'",
       response:
@@ -508,7 +518,7 @@ function FaqSection() {
     },
     {
       q: "What happens if sources conflict?",
-      a: "Gavel can return UNRESOLVED with low confidence when evidence diverges, and the prompt explicitly tells the agent to do this rather than guess. In practice, well-known facts with clear primary sources resolve as YES or NO with high confidence. The harder calls — future events, contested historical claims, or events without clean reporting — are where UNRESOLVED earns its place. The market operator can also tighten or loosen this threshold per query.",
+      a: "Gavel returns UNRESOLVED with low confidence. Try \"Did Yevgeny Prigozhin die in the August 2023 plane crash, according to the official Russian investigation?\" — international reporting and the official Russian investigation diverged. Gavel cites both sides and refuses to fake certainty. UNRESOLVED is always a valid answer.",
     },
     {
       q: "Who runs the oracle signer?",
@@ -534,7 +544,11 @@ function FaqSection() {
 
   return (
     <section className="max-w-6xl mx-auto px-6 py-16 border-t border-slate-900">
-      <SectionHeader kicker="FAQ" title="FAQs" body="" />
+      <SectionHeader
+        kicker="FAQ"
+        title="The hard questions"
+        body="Real pushback we've gotten from judges and crypto-native builders."
+      />
       <div className="space-y-3 mt-10">
         {faqs.map((f, i) => (
           <FaqItem key={i} q={f.q} a={f.a} />
@@ -557,9 +571,13 @@ function SectionHeader({
 }) {
   return (
     <div className="max-w-3xl">
-      <p className="text-xs uppercase tracking-widest text-amber-400/70 font-mono mb-3">{kicker}</p>
-      <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">{title}</h2>
-      {body && <p className="text-slate-400 leading-relaxed">{body}</p>}
+      <p className="text-xs uppercase tracking-widest text-amber-400/70 font-mono mb-3">
+        {kicker}
+      </p>
+      <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+        {title}
+      </h2>
+      <p className="text-slate-400 leading-relaxed">{body}</p>
     </div>
   );
 }
@@ -567,7 +585,9 @@ function SectionHeader({
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-slate-800 bg-slate-900/30 px-4 py-3">
-      <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">{label}</p>
+      <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
+        {label}
+      </p>
       <p className="text-xl font-bold tracking-tight">{value}</p>
     </div>
   );
@@ -691,8 +711,8 @@ function FaqItem({ q, a }: { q: string; a: string }) {
       >
         <span className="font-medium text-slate-100">{q}</span>
         <ArrowRight
-          className={
-            "w-4 h-4 text-slate-500 shrink-0 transition-transform " + (open ? "rotate-90" : "")
+          className={"w-4 h-4 text-slate-500 shrink-0 transition-transform " +
+            (open ? "rotate-90" : "")
           }
         />
       </button>
