@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Sparkles, ShieldCheck, ExternalLink, BookOpen } from "lucide-react";
+import { ShieldCheck, ExternalLink, BookOpen, Home as HomeIcon } from "lucide-react";
 
 const EXPLORER = process.env.NEXT_PUBLIC_BASESCAN_URL || "https://sepolia.basescan.org";
 const CONTRACT = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "";
@@ -28,39 +29,46 @@ export function Nav({ children }: { children?: React.ReactNode }) {
   const isHIW = pathname === "/how-it-works";
 
   return (
-    <header className="border-b border-slate-800/60 backdrop-blur-sm sticky top-0 z-30 bg-slate-950/60">
-      <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+    <header className="border-b border-slate-800/60 backdrop-blur-sm sticky top-0 z-30 bg-slate-950/70">
+      <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="bg-gradient-to-br from-amber-400 to-orange-500 p-1.5 rounded-lg group-hover:scale-105 transition">
-              <Sparkles className="w-5 h-5 text-slate-900" />
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="relative w-9 h-9 rounded-lg overflow-hidden ring-1 ring-slate-800 group-hover:ring-amber-500/40 transition">
+              <Image
+                src="/gavel_logo.png"
+                alt="Gavel"
+                fill
+                priority
+                sizes="36px"
+                className="object-cover"
+              />
             </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-xl font-bold tracking-tight">Gavel</span>
-              <span className="text-[10px] uppercase tracking-wider text-amber-400/70 font-mono hidden sm:inline">
-                v0.1 · Base Sepolia
-              </span>
-            </div>
+            <span className="text-xl font-bold tracking-tight">
+              G<span className="text-amber-400">A</span>vel
+            </span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-1 text-sm">
             <Link
               href="/"
-              className={`px-3 py-1.5 rounded-md transition ${
-                isHome
+              className={
+                "px-3 py-1.5 rounded-md transition flex items-center gap-1.5 " +
+                (isHome
                   ? "text-slate-100 bg-slate-800/60"
-                  : "text-slate-400 hover:text-slate-100"
-              }`}
+                  : "text-slate-400 hover:text-slate-100")
+              }
             >
-              Demo
+              <HomeIcon className="w-3.5 h-3.5" />
+              Home
             </Link>
             <Link
               href="/how-it-works"
-              className={`px-3 py-1.5 rounded-md transition flex items-center gap-1.5 ${
-                isHIW
+              className={
+                "px-3 py-1.5 rounded-md transition flex items-center gap-1.5 " +
+                (isHIW
                   ? "text-slate-100 bg-slate-800/60"
-                  : "text-slate-400 hover:text-slate-100"
-              }`}
+                  : "text-slate-400 hover:text-slate-100")
+              }
             >
               <BookOpen className="w-3.5 h-3.5" />
               How it works
@@ -80,7 +88,7 @@ export function Nav({ children }: { children?: React.ReactNode }) {
             <span className="hidden sm:inline">GitHub</span>
           </a>
           <a
-            href={`${EXPLORER}/address/${CONTRACT}`}
+            href={EXPLORER + "/address/" + CONTRACT}
             target="_blank"
             rel="noreferrer"
             className="hover:text-amber-400 flex items-center gap-1 transition"

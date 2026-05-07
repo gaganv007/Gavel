@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { motion } from "framer-motion";
 import {
   Loader2,
   CheckCircle2,
@@ -12,6 +14,11 @@ import {
   Wallet,
   CreditCard,
   ExternalLink,
+  ArrowRight,
+  Clock,
+  DollarSign,
+  Activity,
+  TrendingUp,
 } from "lucide-react";
 import {
   useAccount,
@@ -252,319 +259,436 @@ export default function Home() {
     : null;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
-      <Nav>
-        {isConnected && address ? (
-          <button
-            onClick={() => disconnect()}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-800/60 hover:bg-slate-800 transition"
+    <main className="min-h-screen bg-slate-950 text-slate-100 relative overflow-hidden">
+      {/* Decorative gradient blobs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-32 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-3xl" />
+        <div className="absolute top-[40%] -left-32 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-3xl" />
+      </div>
+
+      <div className="relative z-10">
+        <Nav>
+          {isConnected && address ? (
+            <button
+              onClick={() => disconnect()}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-800/60 hover:bg-slate-800 transition"
+            >
+              <Wallet className="w-3 h-3" />
+              <span className="font-mono">
+                {address.slice(0, 6)}…{address.slice(-4)}
+              </span>
+            </button>
+          ) : null}
+        </Nav>
+
+        {/* Hero */}
+        <section className="max-w-6xl mx-auto px-6 pt-16 pb-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="max-w-3xl"
           >
-            <Wallet className="w-3 h-3" />
-            <span className="font-mono">
-              {address.slice(0, 6)}…{address.slice(-4)}
-            </span>
-          </button>
-        ) : null}
-      </Nav>
-
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-          <Stat label="Verdicts settled" value="14" />
-          <Stat label="Avg resolution" value="14s" />
-          <Stat label="Median fee" value="$0.50" />
-          <Stat label="Active markets" value="4" />
-        </div>
-
-        <div className="grid lg:grid-cols-2 gap-8">
-          <div>
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4">
-              Markets to resolve
-            </h2>
-            <div className="space-y-3">
-              {DEMO_MARKETS.map((m) => (
-                <button
-                  key={m.id}
-                  onClick={() => {
-                    setSelected(m);
-                    reset();
-                  }}
-                  className={"w-full text-left rounded-xl border transition p-5 " +
-                    (selected.id === m.id
-                      ? "border-amber-500/50 bg-amber-500/5"
-                      : "border-slate-800 bg-slate-900/40 hover:border-slate-700")
-                  }
-                >
-                  <p className="font-medium text-slate-100 mb-3 leading-snug">
-                    {m.question}
-                  </p>
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-3">
-                      <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded font-mono">
-                        YES {(m.yesPrice * 100).toFixed(0)}c
-                      </span>
-                      <span className="px-2 py-1 bg-rose-500/10 text-rose-400 rounded font-mono">
-                        NO {((1 - m.yesPrice) * 100).toFixed(0)}c
-                      </span>
-                    </div>
-                    <div className="text-slate-500 flex items-center gap-2">
-                      <span>Vol {m.volume}</span>
-                      <StatusPill ends={m.ends} />
-                    </div>
-                  </div>
-                </button>
-              ))}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono uppercase tracking-wider mb-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              Live on Base Sepolia
             </div>
-          </div>
+            <h1 className="text-5xl sm:text-6xl font-bold tracking-tight mb-6 leading-[1.05]">
+              The AI oracle <br />
+              that <span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">calls it.</span>
+            </h1>
+            <p className="text-slate-400 text-lg leading-relaxed mb-8 max-w-2xl">
+              Resolve any prediction market in 30 seconds for <span className="text-slate-100 font-semibold">$0.50 USDC</span>.
+              Pay via x402, get a verdict from Claude grounded in cited sources, settled
+              immutably on Base.
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <a
+                href="#try-it"
+                className="px-5 py-2.5 rounded-lg font-semibold bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 hover:from-amber-300 hover:to-orange-400 transition shadow-lg shadow-amber-500/20 flex items-center gap-2"
+              >
+                Try it live
+                <ArrowRight className="w-4 h-4" />
+              </a>
+              <Link
+                href="/how-it-works"
+                className="px-5 py-2.5 rounded-lg font-semibold bg-slate-800/60 hover:bg-slate-800 text-slate-200 transition border border-slate-700 flex items-center gap-2"
+              >
+                How it works
+              </Link>
+            </div>
+          </motion.div>
 
-          <div className="lg:sticky lg:top-24 self-start">
-            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Zap className="w-4 h-4 text-amber-400" />
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
-                  Resolve via Gavel
-                </h3>
-              </div>
+          {/* Stats grid */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-14"
+          >
+            <Stat icon={Activity} label="Verdicts settled" value="14" tint="emerald" />
+            <Stat icon={Clock} label="Avg resolution" value="14s" tint="blue" />
+            <Stat icon={DollarSign} label="Median fee" value="$0.50" tint="amber" />
+            <Stat icon={TrendingUp} label="Active markets" value="4" tint="purple" />
+          </motion.div>
+        </section>
 
-              <p className="text-slate-100 mb-6 leading-relaxed">
-                {selected.question}
-              </p>
+        {/* Markets + Resolve panel */}
+        <section id="try-it" className="max-w-6xl mx-auto px-6 py-12 border-t border-slate-900">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4 }}
+            className="mb-8"
+          >
+            <p className="text-xs uppercase tracking-widest text-amber-400/70 font-mono mb-2">
+              Try it live
+            </p>
+            <h2 className="text-3xl font-bold tracking-tight">Pick a market. Watch it resolve.</h2>
+            <p className="text-slate-400 mt-2 text-sm">
+              Every verdict ships with cited sources and an evidence hash on-chain.
+            </p>
+          </motion.div>
 
-              {stage === "idle" && (
-                <button
-                  onClick={startResolution}
-                  className="w-full py-3.5 rounded-lg font-semibold bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 hover:from-amber-300 hover:to-orange-400 transition shadow-lg shadow-amber-500/10"
-                >
-                  Resolve for $0.50 USDC
-                </button>
-              )}
-
-              {stage === "fetching-terms" && (
-                <StatusCard
-                  icon={<Loader2 className="w-4 h-4 animate-spin" />}
-                  title="Requesting payment terms…"
-                  detail="POST /resolve → expecting HTTP 402"
-                />
-              )}
-
-              {stage === "awaiting-wallet" && terms && (
-                <PaymentRequiredCard
-                  terms={terms}
-                  isConnected={isConnected}
-                  connectors={[...connectors]}
-                  onConnect={(c) => {
-                    // @ts-expect-error wagmi connector type narrowing
-                    connect({ connector: c });
-                  }}
-                  onPay={payAndRetry}
-                />
-              )}
-
-              {stage === "switching-chain" && (
-                <StatusCard
-                  icon={<Loader2 className="w-4 h-4 animate-spin" />}
-                  title="Switching to Base Sepolia…"
-                  detail="approve the network change in MetaMask"
-                />
-              )}
-
-              {stage === "awaiting-payment" && (
-                <StatusCard
-                  icon={<Loader2 className="w-4 h-4 animate-spin" />}
-                  title="Awaiting wallet signature…"
-                  detail="confirm the USDC transfer in MetaMask"
-                />
-              )}
-
-              {stage === "confirming-payment" && paymentTxHash && (
-                <div className="rounded-lg bg-slate-950/40 border border-slate-800 p-5 space-y-3">
-                  <div className="flex items-center gap-2 text-amber-400">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="text-sm font-medium">
-                      Waiting for payment confirmation…
-                    </span>
-                  </div>
-                  <a
-                    href={EXPLORER + "/tx/" + paymentTxHash}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="block text-xs font-mono text-slate-400 hover:text-amber-400 truncate"
+          <div className="grid lg:grid-cols-2 gap-8">
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">
+                Markets to resolve
+              </h3>
+              <div className="space-y-3">
+                {DEMO_MARKETS.map((m, i) => (
+                  <motion.button
+                    key={m.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: i * 0.05 }}
+                    onClick={() => {
+                      setSelected(m);
+                      reset();
+                    }}
+                    className={
+                      "w-full text-left rounded-xl border transition-all p-5 " +
+                      (selected.id === m.id
+                        ? "border-amber-500/50 bg-amber-500/5 shadow-lg shadow-amber-500/5"
+                        : "border-slate-800 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-900/60")
+                    }
                   >
-                    {paymentTxHash}
-                  </a>
-                  {waitingForReceipt && (
-                    <p className="text-xs text-slate-500">~5-15 seconds on Base Sepolia</p>
-                  )}
-                </div>
-              )}
-
-              {stage === "resolving" && <ResolvingCard />}
-
-              {stage === "error" && (
-                <div className="rounded-lg border border-rose-500/40 bg-rose-500/5 p-4 text-sm text-rose-300">
-                  <p className="font-medium mb-1">Resolution failed</p>
-                  <p className="text-rose-400/80 break-words">{error}</p>
-                  <button
-                    onClick={reset}
-                    className="mt-3 text-xs underline text-rose-300 hover:text-rose-200"
-                  >
-                    Start over
-                  </button>
-                </div>
-              )}
-
-              {stage === "done" && result && VerdictIcon && (
-                <div className="space-y-5">
-                  <div className="rounded-lg bg-slate-950/50 p-5 border border-slate-800">
-                    <div className="flex items-center gap-3 mb-3">
-                      <VerdictIcon className={"w-7 h-7 " + verdictColor} />
-                      <span className={"text-2xl font-bold " + verdictColor}>
-                        {result.verdict}
-                      </span>
-                      <span className="ml-auto text-xs text-slate-500 font-mono">
-                        {(result.confidence * 100).toFixed(1)}% confident
-                      </span>
-                    </div>
-                    <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                      <div
-                        className={"h-full " +
-                          (result.verdict === "YES"
-                            ? "bg-emerald-400"
-                            : result.verdict === "NO"
-                            ? "bg-rose-400"
-                            : "bg-amber-400")
-                        }
-                        style={{ width: (result.confidence * 100) + "%" }}
-                      />
-                    </div>
-                    <p className="text-sm text-slate-300 mt-4 leading-relaxed">
-                      {result.reasoning}
+                    <p className="font-medium text-slate-100 mb-3 leading-snug">
+                      {m.question}
                     </p>
-                    {result.onchain && (
-                      <div className="grid grid-cols-1 gap-1 mt-4 pt-3 border-t border-slate-800 text-[10px] font-mono text-slate-500">
-                        <div className="flex justify-between">
-                          <span>question hash</span>
-                          <span className="truncate ml-2">
-                            {result.onchain.question_hash.slice(0, 18)}…
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>evidence hash</span>
-                          <span className="truncate ml-2">
-                            {result.onchain.evidence_hash.slice(0, 18)}…
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>resolved in</span>
-                          <span>{(result.elapsed_ms / 1000).toFixed(1)}s</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>model</span>
-                          <span className="truncate ml-2">{result.model}</span>
-                        </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded font-mono">
+                          YES {(m.yesPrice * 100).toFixed(0)}c
+                        </span>
+                        <span className="px-2 py-1 bg-rose-500/10 text-rose-400 rounded font-mono">
+                          NO {((1 - m.yesPrice) * 100).toFixed(0)}c
+                        </span>
                       </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1">
-                      <FileText className="w-3 h-3" />
-                      Sources ({result.sources.length})
-                    </p>
-                    <div className="space-y-2">
-                      {result.sources.map((s, i) => (
-                        <a
-                          key={i}
-                          href={s.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="block rounded-lg bg-slate-950/40 border border-slate-800 p-3 hover:border-slate-700 transition group"
-                        >
-                          <p className="text-sm font-medium text-slate-200 group-hover:text-amber-400 transition leading-snug">
-                            {s.title}
-                          </p>
-                          {s.snippet && (
-                            <p className="text-xs text-slate-500 mt-1">
-                              &quot;{s.snippet}&quot;
-                            </p>
-                          )}
-                          <p className="text-xs text-slate-600 mt-1 truncate">
-                            {s.url}
-                          </p>
-                        </a>
-                      ))}
+                      <div className="text-slate-500 flex items-center gap-2">
+                        <span>Vol {m.volume}</span>
+                        <StatusPill ends={m.ends} />
+                      </div>
                     </div>
-                  </div>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
 
-                  {paymentTxHash && (
+            <div className="lg:sticky lg:top-24 self-start">
+              <div className="rounded-xl border border-slate-800 bg-slate-900/40 backdrop-blur p-6 shadow-xl shadow-black/20">
+                <div className="flex items-center gap-2 mb-4">
+                  <Zap className="w-4 h-4 text-amber-400" />
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+                    Resolve via Gavel
+                  </h3>
+                </div>
+
+                <p className="text-slate-100 mb-6 leading-relaxed">{selected.question}</p>
+
+                {stage === "idle" && (
+                  <button
+                    onClick={startResolution}
+                    className="w-full py-3.5 rounded-lg font-semibold bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 hover:from-amber-300 hover:to-orange-400 transition shadow-lg shadow-amber-500/10"
+                  >
+                    Resolve for $0.50 USDC
+                  </button>
+                )}
+
+                {stage === "fetching-terms" && (
+                  <StatusCard
+                    icon={<Loader2 className="w-4 h-4 animate-spin" />}
+                    title="Requesting payment terms…"
+                    detail="POST /resolve → expecting HTTP 402"
+                  />
+                )}
+
+                {stage === "awaiting-wallet" && terms && (
+                  <PaymentRequiredCard
+                    terms={terms}
+                    isConnected={isConnected}
+                    connectors={[...connectors]}
+                    onConnect={(c) => {
+                      // @ts-expect-error wagmi connector type narrowing
+                      connect({ connector: c });
+                    }}
+                    onPay={payAndRetry}
+                  />
+                )}
+
+                {stage === "switching-chain" && (
+                  <StatusCard
+                    icon={<Loader2 className="w-4 h-4 animate-spin" />}
+                    title="Switching to Base Sepolia…"
+                    detail="approve the network change in MetaMask"
+                  />
+                )}
+
+                {stage === "awaiting-payment" && (
+                  <StatusCard
+                    icon={<Loader2 className="w-4 h-4 animate-spin" />}
+                    title="Awaiting wallet signature…"
+                    detail="confirm the USDC transfer in MetaMask"
+                  />
+                )}
+
+                {stage === "confirming-payment" && paymentTxHash && (
+                  <div className="rounded-lg bg-slate-950/40 border border-slate-800 p-5 space-y-3">
+                    <div className="flex items-center gap-2 text-amber-400">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="text-sm font-medium">
+                        Waiting for payment confirmation…
+                      </span>
+                    </div>
                     <a
                       href={EXPLORER + "/tx/" + paymentTxHash}
                       target="_blank"
                       rel="noreferrer"
-                      className="block rounded-lg bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/30 p-4 hover:border-blue-500/60 transition"
+                      className="block text-xs font-mono text-slate-400 hover:text-amber-400 truncate"
                     >
-                      <div className="flex items-center gap-2 mb-1">
-                        <CreditCard className="w-4 h-4 text-blue-400" />
-                        <span className="text-sm font-semibold text-blue-400">
-                          Payment via x402 (USDC)
-                        </span>
-                        <ExternalLink className="w-3 h-3 text-blue-400/60 ml-auto" />
-                      </div>
-                      <p className="text-xs font-mono text-slate-400 truncate">
-                        {paymentTxHash}
-                      </p>
+                      {paymentTxHash}
                     </a>
-                  )}
+                    {waitingForReceipt && (
+                      <p className="text-xs text-slate-500">~5-15 seconds on Base Sepolia</p>
+                    )}
+                  </div>
+                )}
 
-                  {result.onchain && (
-                    <a
-                      href={result.onchain.explorer_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="block rounded-lg bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 p-4 hover:border-emerald-500/60 transition group"
+                {stage === "resolving" && <ResolvingCard />}
+
+                {stage === "error" && (
+                  <div className="rounded-lg border border-rose-500/40 bg-rose-500/5 p-4 text-sm text-rose-300">
+                    <p className="font-medium mb-1">Resolution failed</p>
+                    <p className="text-rose-400/80 break-words">{error}</p>
+                    <button
+                      onClick={reset}
+                      className="mt-3 text-xs underline text-rose-300 hover:text-rose-200"
                     >
-                      <div className="flex items-center gap-2 mb-1">
-                        <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                        <span className="text-sm font-semibold text-emerald-400">
-                          Settled on Base Sepolia
-                        </span>
-                        <ExternalLink className="w-3 h-3 text-emerald-400/60 ml-auto group-hover:text-emerald-400" />
-                      </div>
-                      <p className="text-xs font-mono text-slate-400 truncate">
-                        0x{result.onchain.tx_hash.replace(/^0x/, "")}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        Block {result.onchain.block_number}
-                      </p>
-                    </a>
-                  )}
+                      Start over
+                    </button>
+                  </div>
+                )}
 
-                  <button
-                    onClick={reset}
-                    className="w-full py-2 text-xs text-slate-500 hover:text-slate-300 transition"
-                  >
-                    Back to markets
-                  </button>
-                </div>
+                {stage === "done" && result && VerdictIcon && (
+                  <div className="space-y-5">
+                    <div className="rounded-lg bg-slate-950/50 p-5 border border-slate-800">
+                      <div className="flex items-center gap-3 mb-3">
+                        <VerdictIcon className={"w-7 h-7 " + verdictColor} />
+                        <span className={"text-2xl font-bold " + verdictColor}>
+                          {result.verdict}
+                        </span>
+                        <span className="ml-auto text-xs text-slate-500 font-mono">
+                          {(result.confidence * 100).toFixed(1)}% confident
+                        </span>
+                      </div>
+                      <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                        <div
+                          className={
+                            "h-full " +
+                            (result.verdict === "YES"
+                              ? "bg-emerald-400"
+                              : result.verdict === "NO"
+                              ? "bg-rose-400"
+                              : "bg-amber-400")
+                          }
+                          style={{ width: result.confidence * 100 + "%" }}
+                        />
+                      </div>
+                      <p className="text-sm text-slate-300 mt-4 leading-relaxed">
+                        {result.reasoning}
+                      </p>
+                      {result.onchain && (
+                        <div className="grid grid-cols-1 gap-1 mt-4 pt-3 border-t border-slate-800 text-[10px] font-mono text-slate-500">
+                          <div className="flex justify-between">
+                            <span>question hash</span>
+                            <span className="truncate ml-2">
+                              {result.onchain.question_hash.slice(0, 18)}…
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>evidence hash</span>
+                            <span className="truncate ml-2">
+                              {result.onchain.evidence_hash.slice(0, 18)}…
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>resolved in</span>
+                            <span>{(result.elapsed_ms / 1000).toFixed(1)}s</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>model</span>
+                            <span className="truncate ml-2">{result.model}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1">
+                        <FileText className="w-3 h-3" />
+                        Sources ({result.sources.length})
+                      </p>
+                      <div className="space-y-2">
+                        {result.sources.map((s, i) => (
+                          <a
+                            key={i}
+                            href={s.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block rounded-lg bg-slate-950/40 border border-slate-800 p-3 hover:border-slate-700 transition group"
+                          >
+                            <p className="text-sm font-medium text-slate-200 group-hover:text-amber-400 transition leading-snug">
+                              {s.title}
+                            </p>
+                            {s.snippet && (
+                              <p className="text-xs text-slate-500 mt-1">
+                                &quot;{s.snippet}&quot;
+                              </p>
+                            )}
+                            <p className="text-xs text-slate-600 mt-1 truncate">{s.url}</p>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+
+                    {paymentTxHash && (
+                      <a
+                        href={EXPLORER + "/tx/" + paymentTxHash}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block rounded-lg bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/30 p-4 hover:border-blue-500/60 transition"
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <CreditCard className="w-4 h-4 text-blue-400" />
+                          <span className="text-sm font-semibold text-blue-400">
+                            Payment via x402 (USDC)
+                          </span>
+                          <ExternalLink className="w-3 h-3 text-blue-400/60 ml-auto" />
+                        </div>
+                        <p className="text-xs font-mono text-slate-400 truncate">
+                          {paymentTxHash}
+                        </p>
+                      </a>
+                    )}
+
+                    {result.onchain && (
+                      <a
+                        href={result.onchain.explorer_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block rounded-lg bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 p-4 hover:border-emerald-500/60 transition group"
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                          <span className="text-sm font-semibold text-emerald-400">
+                            Settled on Base Sepolia
+                          </span>
+                          <ExternalLink className="w-3 h-3 text-emerald-400/60 ml-auto group-hover:text-emerald-400" />
+                        </div>
+                        <p className="text-xs font-mono text-slate-400 truncate">
+                          0x{result.onchain.tx_hash.replace(/^0x/, "")}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Block {result.onchain.block_number}
+                        </p>
+                      </a>
+                    )}
+
+                    <button
+                      onClick={reset}
+                      className="w-full py-2 text-xs text-slate-500 hover:text-slate-300 transition"
+                    >
+                      Back to markets
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {stage === "idle" && (
+                <p className="text-xs text-slate-600 text-center mt-4 leading-relaxed">
+                  Pay 0.50 USDC via x402 → Claude resolves → verdict written to Base in ~25s.
+                </p>
               )}
             </div>
-
-            {stage === "idle" && (
-              <p className="text-xs text-slate-600 text-center mt-4 leading-relaxed">
-                Pay 0.50 USDC via x402 → Claude resolves → verdict written to Base in ~25s.
-              </p>
-            )}
           </div>
-        </div>
+        </section>
+
+        {/* CTA banner */}
+        <section className="max-w-6xl mx-auto px-6 pb-20">
+          <Link href="/how-it-works" className="block group">
+            <div className="rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900/60 to-slate-900/30 p-8 hover:border-amber-500/30 transition">
+              <div className="flex items-center justify-between gap-6">
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-amber-400/70 font-mono mb-2">
+                    Want the deep dive?
+                  </p>
+                  <h3 className="text-2xl font-bold tracking-tight mb-1">
+                    See the architecture, the stages, the pitch.
+                  </h3>
+                  <p className="text-slate-400 text-sm">
+                    Interactive flow diagram, copy-paste curl examples, the FAQ that answered every judge pushback.
+                  </p>
+                </div>
+                <div className="shrink-0 w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center group-hover:bg-amber-500/20 transition">
+                  <ArrowRight className="w-5 h-5 text-amber-400" />
+                </div>
+              </div>
+            </div>
+          </Link>
+        </section>
       </div>
     </main>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({
+  icon: Icon,
+  label,
+  value,
+  tint,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+  tint: "emerald" | "blue" | "amber" | "purple";
+}) {
+  const tintMap = {
+    emerald: "text-emerald-400 bg-emerald-500/10",
+    blue: "text-blue-400 bg-blue-500/10",
+    amber: "text-amber-400 bg-amber-500/10",
+    purple: "text-purple-400 bg-purple-500/10",
+  };
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900/30 px-4 py-3">
-      <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">{label}</p>
-      <p className="text-xl font-bold tracking-tight">{value}</p>
+    <div className="rounded-xl border border-slate-800 bg-slate-900/30 backdrop-blur p-4">
+      <div className="flex items-center gap-2 mb-2">
+        <div className={"p-1.5 rounded-md " + tintMap[tint]}>
+          <Icon className="w-3.5 h-3.5" />
+        </div>
+        <p className="text-[10px] uppercase tracking-wider text-slate-500">{label}</p>
+      </div>
+      <p className="text-2xl font-bold tracking-tight">{value}</p>
     </div>
   );
 }
