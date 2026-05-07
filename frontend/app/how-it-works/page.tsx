@@ -383,7 +383,7 @@ function ArchitectureSection() {
         </ReactFlow>
       </div>
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6 text-xs">
-        <LegendItem color="amber" label="Client (you)" />
+        <LegendItem color="amber" label="Client" />
         <LegendItem color="blue" label="AWS Lambda + API Gateway" />
         <LegendItem color="purple" label="AI inference" />
         <LegendItem color="emerald" label="Base Sepolia + USDC" />
