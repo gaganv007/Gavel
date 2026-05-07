@@ -260,11 +260,10 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 relative overflow-hidden">
-      {/* Decorative gradient blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-32 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-3xl" />
-        <div className="absolute top-[40%] -left-32 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-32 w-[500px] h-[500px] bg-amber-500/[0.04] rounded-full blur-3xl" />
+        <div className="absolute top-[40%] -left-32 w-[400px] h-[400px] bg-emerald-500/[0.04] rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-[300px] h-[300px] bg-blue-500/[0.04] rounded-full blur-3xl" />
       </div>
 
       <div className="relative z-10">
@@ -283,25 +282,28 @@ export default function Home() {
         </Nav>
 
         {/* Hero */}
-        <section className="max-w-6xl mx-auto px-6 pt-16 pb-12">
+        <section className="max-w-6xl mx-auto px-6 pt-20 pb-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="max-w-3xl"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono uppercase tracking-wider mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono uppercase tracking-wider mb-7">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
               Live on Base Sepolia
             </div>
-            <h1 className="text-5xl sm:text-6xl font-bold tracking-tight mb-6 leading-[1.05]">
-              The AI oracle <br />
-              that <span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">calls it.</span>
+            <h1 className="text-5xl sm:text-7xl font-bold tracking-tight mb-7 leading-[1.02]">
+              The AI oracle <br className="hidden sm:block" />
+              that{" "}
+              <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-orange-500 bg-clip-text text-transparent">
+                calls it.
+              </span>
             </h1>
-            <p className="text-slate-400 text-lg leading-relaxed mb-8 max-w-2xl">
-              Resolve any prediction market in 30 seconds for <span className="text-slate-100 font-semibold">$0.50 USDC</span>.
-              Pay via x402, get a verdict from Claude grounded in cited sources, settled
-              immutably on Base.
+            <p className="text-slate-400 text-lg leading-relaxed mb-9 max-w-2xl">
+              Resolve any prediction market in 30 seconds for{" "}
+              <span className="text-slate-100 font-semibold">$0.50 USDC</span>. Pay via x402,
+              get a verdict from Claude grounded in cited sources, settled immutably on Base.
             </p>
             <div className="flex flex-wrap items-center gap-3">
               <a
@@ -320,12 +322,12 @@ export default function Home() {
             </div>
           </motion.div>
 
-          {/* Stats grid */}
+          {/* Stats */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
-            className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-14"
+            className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-16"
           >
             <Stat icon={Activity} label="Verdicts settled" value="14" tint="emerald" />
             <Stat icon={Clock} label="Avg resolution" value="14s" tint="blue" />
@@ -335,19 +337,21 @@ export default function Home() {
         </section>
 
         {/* Markets + Resolve panel */}
-        <section id="try-it" className="max-w-6xl mx-auto px-6 py-12 border-t border-slate-900">
+        <section id="try-it" className="max-w-6xl mx-auto px-6 py-16 border-t border-slate-900">
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.4 }}
-            className="mb-8"
+            className="mb-10"
           >
-            <p className="text-xs uppercase tracking-widest text-amber-400/70 font-mono mb-2">
+            <p className="text-xs uppercase tracking-widest text-amber-400/70 font-mono mb-3">
               Try it live
             </p>
-            <h2 className="text-3xl font-bold tracking-tight">Pick a market. Watch it resolve.</h2>
-            <p className="text-slate-400 mt-2 text-sm">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+              Pick a market. Watch it resolve.
+            </h2>
+            <p className="text-slate-400 mt-3 text-sm max-w-2xl">
               Every verdict ships with cited sources and an evidence hash on-chain.
             </p>
           </motion.div>
@@ -375,9 +379,7 @@ export default function Home() {
                         : "border-slate-800 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-900/60")
                     }
                   >
-                    <p className="font-medium text-slate-100 mb-3 leading-snug">
-                      {m.question}
-                    </p>
+                    <p className="font-medium text-slate-100 mb-3 leading-snug">{m.question}</p>
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
                         <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded font-mono">
@@ -634,6 +636,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <div className="h-20" />
       </div>
     </main>
   );
@@ -657,14 +661,14 @@ function Stat({
     purple: "text-purple-400 bg-purple-500/10",
   };
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/30 backdrop-blur p-4">
-      <div className="flex items-center gap-2 mb-2">
+    <div className="rounded-xl border border-slate-800 bg-slate-900/30 backdrop-blur p-5 hover:border-slate-700 transition">
+      <div className="flex items-center gap-2 mb-3">
         <div className={"p-1.5 rounded-md " + tintMap[tint]}>
           <Icon className="w-3.5 h-3.5" />
         </div>
         <p className="text-[10px] uppercase tracking-wider text-slate-500">{label}</p>
       </div>
-      <p className="text-2xl font-bold tracking-tight">{value}</p>
+      <p className="text-3xl font-bold tracking-tight">{value}</p>
     </div>
   );
 }
